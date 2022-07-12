@@ -2,11 +2,7 @@
 module.exports = {
     default_module: 'api',
     weixin: {
-        appid: 'wx046778b3d0bb9c55', // 小程序 appid
-        secret: 'da13e5346ba02c0d8f738cbc2c3c5b3a', // 小程序密钥
-        mch_id: '1620233613', // 商户帐号ID
-        partner_key: '75ba31f4056250af0005020053929698', // 微信支付密钥
-        notify_url: 'https://shop.beijingepidial.com:4430/api/pay/notify' // 微信支付异步通知
+
     },
     express: {
         // 已废弃，之后考虑改回来，做成和阿里云的物流查询可以切换，方便大家的使用
@@ -24,10 +20,7 @@ module.exports = {
         ip_server_url:'http://www.kdniao.com/External/GetIp.aspx'
     },
     qiniu: {
-        access_key: 'v5X-QTxq1EWNRu1YzK8QV3kndVQH1A5c5Z6Wj5I4',      // 在七牛密钥管理中获取
-        secret_key: 'ej4_NQzLcAJNrbw2gAi3bLL7LuEbDlzUCQlOQgjv',    // 在七牛密钥管理中获取
-        bucket: 'bainuoshop',                    // 请填自己的bucket的名称
-        domain: 'https://img.beijingepidial.com/'                         // 请填自己的domain域名
+                         // 请填自己的domain域名
     },
     // 在七牛新建一个https的空间，这个是用来存储分享图片的https图片，对应的是goods表中的https_pic_url
     qiniuHttps: {
