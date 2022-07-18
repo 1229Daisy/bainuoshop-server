@@ -2,7 +2,7 @@
 module.exports = {
     default_module: 'api',
     weixin: {
-
+        
     },
     express: {
         // 已废弃，之后考虑改回来，做成和阿里云的物流查询可以切换，方便大家的使用
@@ -20,7 +20,7 @@ module.exports = {
         ip_server_url:'http://www.kdniao.com/External/GetIp.aspx'
     },
     qiniu: {
-                         // 请填自己的domain域名
+     
     },
     // 在七牛新建一个https的空间，这个是用来存储分享图片的https图片，对应的是goods表中的https_pic_url
     qiniuHttps: {

@@ -417,6 +417,48 @@ module.exports = class extends Base {
         const latestExpressInfo = await this.model('order_express').getLatestOrderExpressByAli(orderId);
         return this.success(latestExpressInfo);
     }
+     // 从数据库获得物流信息
+     async getexprefromdbAction() {
+        const orderId = this.post('orderId');
+        let express = await this.model('order_express').where({
+            order_id: orderId
+        }).find();
+        return this.success(express);
+    }
+
+    async saveDiscountAction(){
+        let formdata = this.post('info');
+        // console.info(formdata.discount_id+"%%%%%%%%%%")
+        if(!formdata.discount_id){
+            await this.model('order_discount').add(formdata)
+            return this.success();
+        }
+       
+        await this.model('order_discount').where({
+            discount_id: formdata.discount_id
+        }).update(formdata);
+        return this.success();
+    }
+
+    async discountAction() {
+		const data = await this.model('order_discount').select();
+		return this.success(data);
+	}
+    async discountShowAction() {
+        let id = this.post('id');
+		const data = await this.model('order_discount').where({
+            discount_id: id
+        }).find();
+		return this.success(data);
+	}
+
+    async destoryDiscountAction() {
+		const id = this.post('id');
+		await this.model('order_discount').where({
+			discount_id: id
+		}).limit(1).delete();
+		return this.success();
+	}
     async getPrintTestAction() {
         const latestExpressInfo = await this.model('order_express').printExpress();
         return this.success(latestExpressInfo);

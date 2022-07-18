@@ -53,12 +53,14 @@ module.exports = class extends think.Service {
                 body: payInfo.body,
                 out_trade_no: payInfo.out_trade_no,
                 total_fee: payInfo.total_fee,
+                // mch_id: think.config('weixin.mch_id'),
                 // total_fee: total_fee,
                 spbill_create_ip: payInfo.spbill_create_ip,
                 notify_url: think.config('weixin.notify_url'),
                 trade_type: 'JSAPI'
             }, (res) => {
                 console.log(res);
+                console.info("payInfo.out_trade_no是"+payInfo.out_trade_no)
                 if (res.return_code === 'SUCCESS' && res.result_code === 'SUCCESS') {
                     const returnParams = {
                         'appid': res.appid,
@@ -67,10 +69,28 @@ module.exports = class extends think.Service {
                         'package': 'prepay_id=' + res.prepay_id,
                         'signType': 'MD5'
                     };
-                    const paramStr = `appId=${returnParams.appid}&nonceStr=${returnParams.nonceStr}&package=${returnParams.package}&signType=${returnParams.signType}&timeStamp=${returnParams.timeStamp}&key=` + think.config('weixin.partner_key');
+                    let paramStr = `appId=${returnParams.appid}&nonceStr=${returnParams.nonceStr}&package=${returnParams.package}&signType=${returnParams.signType}&timeStamp=${returnParams.timeStamp}&key=`+think.config('weixin.partner_key');
                     returnParams.paySign = md5(paramStr).toUpperCase();
+                    // const returnParams = {
+                    //     'appid': think.config('weixin.appid'),
+                    //     'mch_id': think.config('weixin.mch_id'),
+                    //     'nonce_str': res.nonce_str,
+                    //     'sign_type': 'MD5',
+                    //     'body': 'oder',
+                    //     'package': 'prepay_id=' + res.prepay_id,
+                    //     'out_trade_no': payInfo.out_trade_no,
+                    //     'total_fee': payInfo.total_fee,
+                    //     'spbill_create_ip': payInfo.spbill_create_ip,
+                    //     'notify_url': think.config('weixin.notify_url'),
+                    //     'trade_type': 'JSAPI',
+                    //     'openid': payInfo.openid
+                    // };
+                    // let paramStr = `appid=${returnParams.appid}&body${returnParams.body}&mch_id${returnParams.mch_id}&nonce_str=${returnParams.nonce_str}&nnotify_url=${returnParams.notify_url}&openid=${returnParams.openid}&out_trade_no=${returnParams.out_trade_no}&package=${returnParams.package}&sign_type=${returnParams.sign_type}&spbill_create_ip=${returnParams.spbill_create_ip}&total_fee=${returnParams.total_fee}&trade_type=${returnParams.trade_type}`
+                    // paramStr += 'key='+think.config('weixin.partner_key');
+                    // //第三步：使用sign_type中配置的方式加密，这里是MD5
+                    // returnParams.sign = md5(paramStr).toUpperCase();
                     let order_sn = payInfo.out_trade_no;
-                    resolve(returnParams);
+                   resolve(returnParams);
                 } else {
                     reject(res);
                 }

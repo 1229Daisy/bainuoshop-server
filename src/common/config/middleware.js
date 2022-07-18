@@ -26,7 +26,9 @@ module.exports = [{
     }
 }, {
     handle: 'payload',
-    options: {}
+    options: {
+        explicitArray: false
+    }
 }, {
     handle: 'router',
     options: {

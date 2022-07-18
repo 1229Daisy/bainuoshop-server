@@ -80,18 +80,18 @@ module.exports = class extends Base {
         }
     }
     async notifyAction() {
-        console.info("*******$$$$$$$$$$$")
         const WeixinSerivce = this.service('weixin', 'api');
         const data = this.post('xml');
         const result = WeixinSerivce.payNotify(this.post('xml'));
-        console.info(data+"*******")
-        console.info(result+"$$$$$$$$$$$")
+        console.info(data)
+        console.info(result+"#")
         if (!result) {
             let echo = 'FAIL+noresult';
             return this.json(echo);
         }
         const orderModel = this.model('order');
         const orderInfo = await orderModel.getOrderByOrderSn(result.out_trade_no);
+        console.info(orderInfo.order_sn+orderInfo.order_status)
         if (think.isEmpty(orderInfo)) {
             let echo = 'FAIL+noorder';
             return this.json(echo);

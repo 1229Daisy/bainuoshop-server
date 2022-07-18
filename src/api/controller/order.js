@@ -298,11 +298,13 @@ module.exports = class extends Base {
      */
     async submitAction() {
         // 获取收货地址信息和计算运费
-		const userId = this.getLoginUserId();;
+		const userId = this.getLoginUserId();
         const addressId = this.post('addressId');
         const freightPrice = this.post('freightPrice');
         const offlinePay = this.post('offlinePay');
         let postscript = this.post('postscript');
+        const code = this.post('code').toUpperCase();
+        // console.info(code+"@@@@@@@")
         const buffer = Buffer.from(postscript); // 留言
         const checkedAddress = await this.model('address').where({
             id: addressId
@@ -345,9 +347,22 @@ module.exports = class extends Base {
         for (const cartItem of checkedGoodsList) {
             goodsTotalPrice += cartItem.number * cartItem.retail_price;
         }
+        
+        
         // 订单价格计算
         const orderTotalPrice = goodsTotalPrice + freightPrice; // 订单的总价
-        const actualPrice = orderTotalPrice - 0.00; // 减去其它支付的金额后，要实际支付的金额 比如满减等优惠
+        console.info("订单的总价："+orderTotalPrice)
+        if(!code){
+            var actualPrice = orderTotalPrice - 0.00
+        }else{
+            const dbcode = await this.model('order_discount').where({
+                code: code
+            }).find();
+           var actualPrice= orderTotalPrice*dbcode.discount
+
+        }
+        // const actualPrice = orderTotalPrice - 0.00; // 减去其它支付的金额后，要实际支付的金额 比如满减等优惠
+        console.info("实际价格为"+actualPrice)
         const currentTime = parseInt(new Date().getTime() / 1000);
         let print_info = '';
         for (const item in checkedGoodsList) {
@@ -383,6 +398,7 @@ module.exports = class extends Base {
             order_price: orderTotalPrice,
             actual_price: actualPrice,
             change_price: actualPrice,
+            code: code,
             print_info: print_info,
             offline_pay:offlinePay
         };
@@ -414,6 +430,35 @@ module.exports = class extends Base {
         return this.success({
             orderInfo: orderInfo
         });
+    }
+    async checkCodeAction() {
+        const code = this.post('code');
+        const userId = this.getLoginUserId();
+        // console.info(code)
+        const dbcode = await this.model('order_discount').where({
+            code: code
+        }).find();
+        console.info(dbcode)
+        if(think.isEmpty(dbcode)){
+            return this.fail(400, '请输入正确的优惠码')
+        }else{
+            const userCode = await this.model('order').where({
+                user_id: userId,
+                code: ['!=', null],
+                code: ['!=', '']
+            }).find();
+            if(think.isEmpty(userCode)){
+                return this.success({
+                    dbcode: dbcode
+                })
+            }else{
+                return this.fail(400, '优惠码仅能使用一次')
+            }
+        }
+         
+        
+       
+       
     }
     async updateAction() {
         const addressId = this.post('addressId');
@@ -449,6 +494,7 @@ module.exports = class extends Base {
      * @returns {Promise.<void>}
      */
     async expressAction() {
+        
         const currentTime = parseInt(new Date().getTime() / 1000);
         const orderId = this.get('orderId');
         let info = await this.model('order_express').where({
@@ -465,6 +511,8 @@ module.exports = class extends Base {
         let com = (currentTime - updateTime) / 60;
         let is_finish = info.is_finish;
         if (is_finish == 1) {
+            console.info('物流-------')
+            // console.info(this.success(expressInfo))
             return this.success(expressInfo);
         } else if (updateTime != 0 && com < 20) {
             return this.success(expressInfo);
@@ -494,6 +542,14 @@ module.exports = class extends Base {
             return this.success(express);
         }
         // return this.success(latestExpressInfo);
+    }
+    // 从数据库获得物流信息
+    async getexprefromdbAction() {
+        const orderId = this.get('orderId');
+        let express = await this.model('order_express').where({
+            order_id: orderId
+        }).find();
+        return this.success(express);
     }
     async getExpressInfo(shipperCode, expressNo) {
 		let appCode = "APPCODE "+ think.config('aliexpress.appcode');
