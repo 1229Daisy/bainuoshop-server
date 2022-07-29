@@ -492,6 +492,7 @@ module.exports = class extends Base {
     async storeAction() {
         const values = this.post('info');
         const specData = this.post('specData');
+        // console.info(specData)
         const specValue = this.post('specValue');
         const cateId = this.post('cateId');
         const model = this.model('goods');
@@ -609,6 +610,8 @@ module.exports = class extends Base {
             is_on_sale: 1,
             is_delete: 0
         }).select();
+        // JSON.parse(JSON.stringify(pro))
+        console.info(pro)
         if (pro.length > 1) {
             let goodsNum = await this.model('product').where({
                 goods_id: goods_id,
@@ -647,6 +650,7 @@ module.exports = class extends Base {
                 min_cost_price: minCost,
             });
         } else {
+            // console.info(pro[0].goods_number+"**************")
             let info = {
                 goods_number: pro[0].goods_number,
                 retail_price: pro[0].retail_price,

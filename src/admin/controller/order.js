@@ -23,7 +23,7 @@ module.exports = class extends Base {
                 order_status: ['IN', status],
                 order_type: ['<', 7],
             }).order(['id DESC']).page(page, size).countSelect();
-            console.log(data);
+            // console.log(data);
         } else {
             let orderData = await this.model('order_express').where({
                 logistic_code: logistic_code
@@ -69,6 +69,8 @@ module.exports = class extends Base {
                 item.pay_time = 0;
             }
             item.order_status_text = await this.model('order').getOrderStatusText(item.id);
+            console.info(item.id)
+            console.info(await this.model('order').getOrderStatusText(item.id))
             let express = await this.model('order_express').where({
                 order_id: item.id
             }).find();
@@ -79,6 +81,7 @@ module.exports = class extends Base {
             }
             // item.button_text = await this.model('order').getOrderBtnText(item.id);
         }
+        // console.info(data)
         return this.success(data);
     }
     async getAutoStatusAction() {
@@ -222,6 +225,43 @@ module.exports = class extends Base {
             id: id
         }).update(info);
         return this.success(data);
+    }
+    //同意退款
+    async refundAction() {
+        const id = this.get('orderId');
+        console.info(id)
+        let orderInfo = await this.model('order').where({
+            id: id
+        }).find()
+        const openid = await this.model('user').where({
+            id: orderInfo.user_id
+        }).getField('weixin_openid', true);
+        const WeixinSerivce = this.service('weixin', 'api');
+        try {
+            const returnParams = await WeixinSerivce.createRefund({
+                openid: openid,
+                out_trade_no: orderInfo.order_sn,
+                total_fee: parseInt(orderInfo.actual_price * 100),
+                refund_fee: parseInt(orderInfo.actual_price * 100),
+                out_refund_no: orderInfo.refund_sn
+            });
+            console.info(returnParams)
+            if(returnParams.return_code === 'SUCCESS' && returnParams.result_code === 'SUCCESS'){
+                let info = {
+                    order_status: 203
+                };
+                await this.model('order').where({
+                    id: id
+                }).update(info);
+                return this.success();
+               }else{
+                return this.fail(400, '退款失败?');
+               }
+            
+        } catch (err) {
+            return this.fail(400, '退款失败?');
+        }
+       
     }
     async saveExpressValueInfoAction() {
         const id = this.post('id');

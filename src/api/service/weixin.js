@@ -40,7 +40,8 @@ module.exports = class extends think.Service {
      * @returns {Promise}
      */
     async createUnifiedOrder(payInfo) {
-        const WeiXinPay = require('weixinpay');
+        // const WeiXinPay = require('weixinpay');
+        const WeiXinPay = require('new_weixinpay');
         const weixinpay = new WeiXinPay({
             appid: think.config('weixin.appid'), // 微信小程序appid
             openid: payInfo.openid, // 用户openid
@@ -60,7 +61,6 @@ module.exports = class extends think.Service {
                 trade_type: 'JSAPI'
             }, (res) => {
                 console.log(res);
-                console.info("payInfo.out_trade_no是"+payInfo.out_trade_no)
                 if (res.return_code === 'SUCCESS' && res.result_code === 'SUCCESS') {
                     const returnParams = {
                         'appid': res.appid,
@@ -167,33 +167,33 @@ module.exports = class extends think.Service {
      * @param refundInfo
      * @returns {Promise}
      */
-    createRefund(payInfo) {
-        const WeiXinPay = require('weixinpay');
+     async createRefund(refundInfo) {
+        console.info(refundInfo)
+        // const WeiXinPay = require('weixinpay');
+        const WeiXinPay = require('new_weixinpay');
         const weixinpay = new WeiXinPay({
+            pfx: fs.readFileSync(think.ROOT_PATH + '/cert/apiclient_cert.p12'),
             appid: think.config('weixin.appid'), // 微信小程序appid
-            openid: payInfo.openid, // 用户openid
+            openid: refundInfo.openid, // 用户openid
             mch_id: think.config('weixin.mch_id'), // 商户帐号ID
-            partner_key: think.config('weixin.partner_key') // 秘钥
+            partner_key: think.config('weixin.partner_key'), // 秘钥
         });
+        // console.info(weixinpay.createRefund())
         return new Promise((resolve, reject) => {
-            weixinpay.createUnifiedOrder({
-                body: payInfo.body,
-                out_trade_no: payInfo.out_trade_no,
-                total_fee: payInfo.total_fee,
-                spbill_create_ip: payInfo.spbill_create_ip,
-                notify_url: think.config('weixin.notify_url'),
-                trade_type: 'JSAPI'
+            weixinpay.createRefund({
+                // // body: refundInfo.body,
+                out_trade_no: refundInfo.out_trade_no,
+                total_fee: refundInfo.total_fee,
+                refund_fee: refundInfo.refund_fee,
+                out_refund_no: refundInfo.out_refund_no
             }, (res) => {
+                console.info(res)
                 if (res.return_code === 'SUCCESS' && res.result_code === 'SUCCESS') {
                     const returnParams = {
-                        'appid': res.appid,
-                        'timeStamp': parseInt(Date.now() / 1000) + '',
-                        'nonceStr': res.nonce_str,
-                        'package': 'prepay_id=' + res.prepay_id,
-                        'signType': 'MD5'
+                        'result_code': res.result_code,
+                        'return_code': res.return_code,
+                        'refund_fee': res.refund_fee,
                     };
-                    const paramStr = `appId=${returnParams.appid}&nonceStr=${returnParams.nonceStr}&package=${returnParams.package}&signType=${returnParams.signType}&timeStamp=${returnParams.timeStamp}&key=` + think.config('weixin.partner_key');
-                    returnParams.paySign = md5(paramStr).toUpperCase();
                     resolve(returnParams);
                 } else {
                     reject(res);

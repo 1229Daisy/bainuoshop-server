@@ -8,6 +8,7 @@ module.exports = class extends think.Model {
         const date = new Date();
         return date.getFullYear() + _.padStart(date.getMonth(), 2, '0') + _.padStart(date.getDay(), 2, '0') + _.padStart(date.getHours(), 2, '0') + _.padStart(date.getMinutes(), 2, '0') + _.padStart(date.getSeconds(), 2, '0') + _.random(100000, 999999);
     }
+
     /**
      * 获取订单可操作的选项
      * @param orderId
@@ -76,6 +77,12 @@ module.exports = class extends think.Model {
             case 301:
                 statusText = '已发货';
                 break;
+            case 202:
+                statusText = '待退款';
+                break;
+            case 203:
+                statusText = '已退款';
+                break;
             case 302:
                 statusText = '待评价';
                 break;
@@ -84,6 +91,9 @@ module.exports = class extends think.Model {
                 break;
             case 401:
                 statusText = '交易成功'; //到时间，未收货的系统自动收货、
+                break;
+            case 600:
+                statusText = '可查看报告'; //到时间，未收货的系统自动收货、
                 break;
         }
         return statusText;

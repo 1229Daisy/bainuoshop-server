@@ -45,6 +45,7 @@ module.exports = class extends Base {
             newOrderList.push(item);
         }
         orderList.data = newOrderList;
+        console.info(orderList)
         return this.success(orderList);
     }
     // 获得订单数量
@@ -87,12 +88,45 @@ module.exports = class extends Base {
             is_delete: 0,
             order_status: 301
         }).count('id');
+        let toRefunding = await this.model('order').where({
+            user_id: user_id,
+            order_type: ['<', 7],
+            is_delete: 0,
+            order_status: 202
+        }).count('id');
+        let toRefunded = await this.model('order').where({
+            user_id: user_id,
+            order_type: ['<', 7],
+            is_delete: 0,
+            order_status: 203
+        }).count('id');
+        let refund=toRefunded+toRefunding
         let newStatus = {
             toPay: toPay,
             toDelivery: toDelivery,
             toReceive: toReceive,
+            toRefund: refund
         }
+        console.info(newStatus)
         return this.success(newStatus);
+    }
+    async refundAction() {
+        const orderId = this.get('orderId');
+        const refund_reason = this.get('refund_reason');
+        // console.info(orderId+refund_reason)
+        let orderInfo = await this.model('order').where({
+            id: orderId
+        }).find()
+        let refund_sn=orderInfo.order_sn+orderId
+        let updateInfo = {
+            refund_reason: refund_reason,
+            order_status: 202,
+            refund_sn: refund_sn
+        };
+        await this.model('order').where({
+            id: orderId
+        }).update(updateInfo);
+        return this.success();
     }
     async detailAction() {
         const orderId = this.get('orderId');
@@ -303,7 +337,7 @@ module.exports = class extends Base {
         const freightPrice = this.post('freightPrice');
         const offlinePay = this.post('offlinePay');
         let postscript = this.post('postscript');
-        const code = this.post('code').toUpperCase();
+        var code = this.post('code')
         // console.info(code+"@@@@@@@")
         const buffer = Buffer.from(postscript); // 留言
         const checkedAddress = await this.model('address').where({
@@ -359,7 +393,7 @@ module.exports = class extends Base {
                 code: code
             }).find();
            var actualPrice= orderTotalPrice*dbcode.discount
-
+           code = this.post('code').toUpperCase();
         }
         // const actualPrice = orderTotalPrice - 0.00; // 减去其它支付的金额后，要实际支付的金额 比如满减等优惠
         console.info("实际价格为"+actualPrice)
@@ -400,7 +434,8 @@ module.exports = class extends Base {
             change_price: actualPrice,
             code: code,
             print_info: print_info,
-            offline_pay:offlinePay
+            offline_pay:offlinePay,
+            shipping_fee: 0.00
         };
         // 开启事务，插入订单信息和订单商品
         const orderId = await this.model('order').add(orderInfo);
@@ -445,7 +480,8 @@ module.exports = class extends Base {
             const userCode = await this.model('order').where({
                 user_id: userId,
                 code: ['!=', null],
-                code: ['!=', '']
+                code: ['!=', ''],
+                pay_status: 2
             }).find();
             if(think.isEmpty(userCode)){
                 return this.success({

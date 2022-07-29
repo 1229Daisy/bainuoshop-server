@@ -12,7 +12,7 @@ module.exports = class extends think.Model {
     getOrderStatus(showType) {
         let status = [];
         if (showType == 0) {
-            status.push(101, 102, 103, 201, 202, 203, 300, 301, 302, 303, 401);
+            status.push(101, 102, 103, 201, 202, 203, 300, 301, 302, 303, 401,202,203);
             // TODO 这里会不会效率不高？
         } else if (showType == 1) {
             // 待付款订单
@@ -24,6 +24,9 @@ module.exports = class extends think.Model {
             // 待收货订单
             status.push(301);
         } else if (showType == 4) {
+            // 售后订单
+            status.push(202,203);
+        }else if (showType == 5) {
             // 待评价订单
             status.push(302, 303);
         } else {
@@ -72,23 +75,24 @@ module.exports = class extends think.Model {
         if (orderInfo.order_status === 102 || orderInfo.order_status === 103) {
             handleOption.delete = true;
         }
-        // 如果订单已付款，没有发货，则可退款操作
-        if (orderInfo.order_status === 201) {
-            // handleOption.return = true;
+        // 如果订单已付款，没有发货、待收货，则可退款操作
+        if (orderInfo.order_status === 201 || orderInfo.order_status === 300 || orderInfo.order_status === 301) {
+            handleOption.refund = true;
         }
-        // 如果订单申请退款中，没有相关操作
+        // 如果订单申请退款中，则可以取消退款
         if (orderInfo.order_status === 202) {
             handleOption.cancel_refund = true;
         }
-        if (orderInfo.order_status === 300) {}
+        // if (orderInfo.order_status === 300) {}
         // 如果订单已经退款，则可删除
         if (orderInfo.order_status === 203) {
             handleOption.delete = true;
         }
-        // 如果订单已经发货，没有收货，则可收货操作,
+        // 如果订单已经发货，没有收货，则可收货操作,也可退款操作
         // 此时不能取消订单
         if (orderInfo.order_status === 301) {
             handleOption.confirm = true;
+            
         }
         if (orderInfo.order_status === 401) {
             handleOption.delete = true;
@@ -123,6 +127,12 @@ module.exports = class extends think.Model {
         if (orderInfo.order_status === 401) {
             textCode.success = true;
         }
+        if (orderInfo.order_status === 202) {//退款中
+            textCode.refund = true;
+        }
+        if (orderInfo.order_status === 203) {//已退款
+            textCode.refund = true;
+        }
         return textCode;
     }
     // if (status == 101) "未付款";
@@ -156,6 +166,15 @@ module.exports = class extends think.Model {
                 break;
             case 301:
                 statusText = '已发货';
+                break;
+            case 202:
+                statusText = '待退款';
+                break;
+            case 203:
+                statusText = '已退款';
+                break;
+            case 600:
+                statusText = '可查看报告';
                 break;
             case 401:
                 statusText = '交易成功'; //到时间，未收货的系统自动收货、

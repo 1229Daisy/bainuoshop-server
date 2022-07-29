@@ -36,6 +36,14 @@ module.exports = class extends Base {
         }).select();
         let checkPrice = 0;
         let checkStock = 0;
+        //确认优惠码
+        const userId = this.getLoginUserId();
+        const userCode = await this.model('order').where({
+            user_id: userId,
+            code: ['!=', null],
+            code: ['!=', ''],
+            pay_status: 2
+        }).find();
         for(const item of orderGoods){
             let product = await this.model('product').where({
                 id:item.product_id
@@ -64,6 +72,9 @@ module.exports = class extends Base {
         }).getField('weixin_openid', true);
         if (think.isEmpty(openid)) {
             return this.fail(400, '微信支付失败，没有openid');
+        }
+        if(!think.isEmpty(userCode)){
+            return this.fail(400, '优惠码仅限使用一次');
         }
         const WeixinSerivce = this.service('weixin', 'api');
         try {
